@@ -17,4 +17,13 @@ describe('Users', () => {
 
     expect(response.status).toBe(201);
   });
+
+  it('should not be able to create a new user with duplicate e-mail', async () => {
+    const response = await request(app).post('/users').send({
+      name: 'John Doe',
+      email: 'user@example.com',
+    });
+
+    expect(response.status).toBe(400);
+  });
 });
