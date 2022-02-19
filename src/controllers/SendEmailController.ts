@@ -1,3 +1,4 @@
+import { resolve } from 'path';
 import { Request, Response } from 'express';
 import { getCustomRepository } from 'typeorm';
 
@@ -26,6 +27,38 @@ class SendEmailController {
       return response.status(404).json({ error: 'survey-not-found' });
     }
 
+    const variables = {
+      name: user.name,
+      title: survey.title,
+      description: survey.description,
+      user_id: user.id,
+      link: process.env.URL_MAIL,
+    };
+
+    const npsPath = resolve(__dirname, '..', 'views', 'emails', 'npsMail.hbs');
+
+    const foundSurveyUser = await surveysUsersRepository.findOne({
+      where: [
+        {
+          user_id: user.id,
+        },
+        {
+          value: null,
+        },
+      ],
+    });
+
+    if (foundSurveyUser) {
+      await SendEmailService.execute({
+        to: email,
+        subject: survey.title,
+        variables,
+        path: npsPath,
+      });
+
+      return response.json(foundSurveyUser);
+    }
+
     const surveyUser = surveysUsersRepository.create({
       user_id: user.id,
       survey_id,
@@ -36,7 +69,8 @@ class SendEmailController {
     await SendEmailService.execute({
       to: email,
       subject: survey.title,
-      body: survey.description,
+      variables,
+      path: npsPath,
     });
 
     return response.json(surveyUser);
