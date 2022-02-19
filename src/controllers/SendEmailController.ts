@@ -46,6 +46,7 @@ class SendEmailController {
           value: null,
         },
       ],
+      relations: ['user', 'survey'],
     });
 
     if (foundSurveyUser) {
