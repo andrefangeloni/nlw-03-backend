@@ -27,29 +27,24 @@ class SendEmailController {
       return response.status(404).json({ error: 'survey-not-found' });
     }
 
-    const variables = {
-      name: user.name,
-      title: survey.title,
-      description: survey.description,
-      user_id: user.id,
-      link: process.env.URL_MAIL,
-    };
-
     const npsPath = resolve(__dirname, '..', 'views', 'emails', 'npsMail.hbs');
 
-    const foundSurveyUser = await surveysUsersRepository.findOne({
-      where: [
-        {
-          user_id: user.id,
-        },
-        {
-          value: null,
-        },
-      ],
+    const surveyUser = await surveysUsersRepository.findOne({
+      where: { user_id: user.id, value: null },
       relations: ['user', 'survey'],
     });
 
-    if (foundSurveyUser) {
+    const variables = {
+      id: '',
+      name: user.name,
+      title: survey.title,
+      link: process.env.URL_MAIL,
+      description: survey.description,
+    };
+
+    if (surveyUser) {
+      variables.id = surveyUser.id;
+
       await SendEmailService.execute({
         to: email,
         subject: survey.title,
@@ -57,15 +52,17 @@ class SendEmailController {
         path: npsPath,
       });
 
-      return response.json(foundSurveyUser);
+      return response.json(surveyUser);
     }
 
-    const surveyUser = surveysUsersRepository.create({
+    const surveysUsers = surveysUsersRepository.create({
       user_id: user.id,
       survey_id,
     });
 
-    await surveysUsersRepository.save(surveyUser);
+    await surveysUsersRepository.save(surveysUsers);
+
+    variables.id = surveysUsers.id;
 
     await SendEmailService.execute({
       to: email,
@@ -74,7 +71,7 @@ class SendEmailController {
       path: npsPath,
     });
 
-    return response.json(surveyUser);
+    return response.json(surveysUsers);
   }
 }
 
