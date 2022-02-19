@@ -4,6 +4,7 @@ import { getCustomRepository } from 'typeorm';
 import { UsersRepository } from '../repositories/UsersRepository';
 import { SurveysRepository } from '../repositories/SurveysRepository';
 import { SurveysUsersRepository } from '../repositories/SurveysUsersRepository';
+import SendEmailService from '../services/SendEmailService';
 
 class SendEmailController {
   async execute(request: Request, response: Response) {
@@ -31,6 +32,12 @@ class SendEmailController {
     });
 
     await surveysUsersRepository.save(surveyUser);
+
+    await SendEmailService.execute({
+      to: email,
+      subject: survey.title,
+      body: survey.description,
+    });
 
     return response.json(surveyUser);
   }
