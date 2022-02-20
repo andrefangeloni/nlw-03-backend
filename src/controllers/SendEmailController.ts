@@ -5,7 +5,10 @@ import { getCustomRepository } from 'typeorm';
 import { UsersRepository } from '../repositories/UsersRepository';
 import { SurveysRepository } from '../repositories/SurveysRepository';
 import { SurveysUsersRepository } from '../repositories/SurveysUsersRepository';
+
 import SendEmailService from '../services/SendEmailService';
+
+import { AppError } from '../errors/AppError';
 
 class SendEmailController {
   async execute(request: Request, response: Response) {
@@ -18,13 +21,13 @@ class SendEmailController {
     const user = await usersRepository.findOne({ email });
 
     if (!user) {
-      return response.status(404).json({ error: 'user-not-found' });
+      throw new AppError('user-not-found', 404);
     }
 
     const survey = await surveysRepository.findOne({ id: survey_id });
 
     if (!survey) {
-      return response.status(404).json({ error: 'survey-not-found' });
+      throw new AppError('survey-not-found', 404);
     }
 
     const npsPath = resolve(__dirname, '..', 'views', 'emails', 'npsMail.hbs');
